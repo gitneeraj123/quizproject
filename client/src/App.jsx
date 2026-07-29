@@ -34,7 +34,7 @@ const DashboardLayout = ({ children }) => {
           <h2 className="text-lg font-bold text-pink-600">QuizPlatform</h2>
           <p className="text-xs text-gray-500 mt-1">{user?.organization || 'Workspace'}</p>
           <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-xs font-semibold rounded uppercase tracking-wide text-gray-600">
-            Teacher
+            {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Teacher'}
           </span>
         </div>
         
@@ -43,7 +43,7 @@ const DashboardLayout = ({ children }) => {
           <Link to="/dashboard" className="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-pink-600">Home</Link>
           <Link to="/dashboard/create-quiz" className="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-pink-600">Create Assessment</Link>
           <Link to="/dashboard/sessions" className="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-pink-600 flex items-center gap-2">
-            <span>⏱</span> Sessions & Reports
+             Sessions & Reports
           </Link>
         </nav>
 

@@ -6,7 +6,7 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
   const [uiState, setUiState] = useState('list'); 
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState(null);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
   const [isPublishing, setIsPublishing] = useState(false); 
 
   const [publishForm, setPublishForm] = useState({
@@ -110,44 +110,35 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
     });
   };
 
-  const handleImageUpload = (e, target, optIndex = null) => {
+  const handleImageUpload = async (e, target, optIndex = null) => {
     const file = e.target.files[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
     
-    if (target === 'question') {
-      setEditData({ ...editData, imageUrl: url });
-    } else if (target === 'option') {
-      const newOpts = [...editData.options];
-      newOpts[optIndex].imageUrl = url;
-      setEditData({ ...editData, options: newOpts });
-    } else if (target === 'cover') {
-      setPublishForm({ ...publishForm, coverImage: url });
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+      const response = await api.post('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = response.data.data.url;
+      
+      if (target === 'question') {
+        setEditData({ ...editData, imageUrl: url });
+      } else if (target === 'option') {
+        const newOpts = [...editData.options];
+        newOpts[optIndex].imageUrl = url;
+        setEditData({ ...editData, options: newOpts });
+      } else if (target === 'cover') {
+        setPublishForm({ ...publishForm, coverImage: url });
+      }
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert('Failed to upload image. Please try again.');
     }
   };
 
-  const handleAIGenerate = (type) => {
-    setIsGeneratingAI(true);
-    setTimeout(() => {
-      setQuestions([...questions, {
-        question: type === 'similar' ? 'What is a core benefit of using React Hooks?' : 'What does SQL stand for?',
-        imageUrl: null,
-        options: [
-          { text: 'They allow state in functional components', imageUrl: null },
-          { text: 'They replace Redux entirely', imageUrl: null },
-          { text: 'They are required for all React apps', imageUrl: null },
-          { text: 'They improve CSS styling', imageUrl: null }
-        ],
-        correctAnswers: [0],
-        multipleCorrect: false,
-        timeLimit: 1,
-        points: 1,
-        type: 'Multiple Choice'
-      }]);
-      setIsGeneratingAI(false);
-      setUiState('list');
-    }, 1500);
-  };
+
 
   const handleFinalPublish = async () => {
     setIsPublishing(true);
@@ -192,19 +183,7 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
           <button onClick={() => setUiState('list')} className="text-gray-400 hover:text-gray-800 text-xl">✕</button>
         </div>
         
-        <div className="mb-8">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">
-            <span className="text-[#00B4D8]">✨</span> Create with AI
-          </h3>
-          <div className="flex gap-4">
-            <button onClick={() => handleAIGenerate('similar')} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-sm font-medium flex items-center gap-2">
-              {isGeneratingAI ? 'Generating...' : '🧩 Generate similar questions'}
-            </button>
-            <button onClick={() => handleAIGenerate('topic')} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-sm font-medium">
-              📖 Generate questions on topic
-            </button>
-          </div>
-        </div>
+
 
         <div>
           <h3 className="text-lg font-bold text-gray-800 mb-4">Create with question type</h3>

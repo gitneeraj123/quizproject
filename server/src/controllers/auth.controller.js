@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: '30d',
+    expiresIn: '15m',
   });
   const refreshToken = jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: '30d',
@@ -16,12 +16,11 @@ const setCookie = (res, refreshToken) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
 
-// Removed 'next' from parameters
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
     const { name, email, password, organization } = req.body;
 
@@ -44,14 +43,11 @@ export const register = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, organization: user.organization, role: user.role },
     });
   } catch (error) {
-    // Handling the error natively without 'next'
-    console.error('Registration Error:', error);
-    res.status(500).json({ success: false, message: error.message || 'Server Error during registration' });
+    next(error);
   }
 };
 
-// Removed 'next' from parameters
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -72,8 +68,43 @@ export const login = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, organization: user.organization, role: user.role },
     });
   } catch (error) {
-    // Handling the error natively without 'next'
-    console.error('Login Error:', error);
-    res.status(500).json({ success: false, message: error.message || 'Server Error during login' });
+    next(error);
   }
+};
+
+export const refreshAccessToken = async (req, res, next) => {
+  try {
+    const token = req.cookies?.jwt;
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'No refresh token provided.' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id).select('+refreshToken');
+
+    if (!user || user.refreshToken !== token) {
+      return res.status(403).json({ success: false, message: 'Invalid refresh token.' });
+    }
+
+    // Issue new tokens
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id);
+    
+    user.refreshToken = newRefreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    setCookie(res, newRefreshToken);
+
+    res.status(200).json({
+      success: true,
+      accessToken,
+    });
+  } catch (error) {
+    return res.status(403).json({ success: false, message: 'Refresh token expired or invalid. Please log in again.' });
+  }
+};
+
+export const logout = async (req, res) => {
+  res.cookie('jwt', '', { httpOnly: true, expires: new Date(0) });
+  res.status(200).json({ success: true, message: 'Logged out successfully.' });
 };

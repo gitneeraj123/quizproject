@@ -25,7 +25,7 @@ export default function Sessions() {
   }, []);
 
   const handleCopyLink = (quizId) => {
-    navigator.clipboard.writeText(`http://localhost:5173/take-quiz/${quizId}`);
+    navigator.clipboard.writeText(`${window.location.origin}/take-quiz/${quizId}`);
     alert('Student link copied to clipboard!');
   };
 

@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 
 export default function TakeQuiz() {
   const { id } = useParams(); 
@@ -29,7 +29,7 @@ export default function TakeQuiz() {
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/v1/quizzes/${id}/student`);
+        const res = await api.get(`/quizzes/${id}/student`);
         const quizData = res.data.data;
         
         if (quizData.expiresAt && new Date() > new Date(quizData.expiresAt)) {
@@ -143,7 +143,7 @@ export default function TakeQuiz() {
         studentIdentifier: studentEmail || 'No Email',
         studentAnswers: answers
       };
-      const res = await axios.post('http://localhost:5000/api/v1/results', payload);
+      const res = await api.post('/results', payload);
       setResult(res.data.data); 
     } catch (err) {
       alert('Failed to submit answers. Please try again.');
@@ -254,23 +254,37 @@ export default function TakeQuiz() {
             <h2 className="text-xl font-bold text-gray-900 mb-6">{q.question}</h2>
             
             <div className="space-y-3">
-              {q.options.map((opt, idx) => {
-                const isSelected = selectedOptions.includes(idx);
-                return (
-                  <button 
-                    key={idx}
-                    onClick={() => handleOptionSelect(globalIdx, idx)}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
-                      isSelected ? 'border-indigo-600 bg-indigo-50/50 font-bold' : 'border-gray-200 bg-white'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center text-xs ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
-                      {isSelected && '✓'}
-                    </div>
-                    <span>{opt.text}</span>
-                  </button>
-                );
-              })}
+              {q.type === 'Fill in the Blank' ? (
+                <div className="mt-4">
+                  <input
+                    type="text"
+                    value={answers[globalIdx]?.[0] || ''}
+                    onChange={(e) => {
+                      setAnswers(prev => ({ ...prev, [globalIdx]: [e.target.value] }));
+                    }}
+                    placeholder="Type your answer here..."
+                    className="w-full p-4 text-lg border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                  />
+                </div>
+              ) : (
+                q.options.map((opt, idx) => {
+                  const isSelected = selectedOptions.includes(idx);
+                  return (
+                    <button 
+                      key={idx}
+                      onClick={() => handleOptionSelect(globalIdx, idx)}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
+                        isSelected ? 'border-indigo-600 bg-indigo-50/50 font-bold' : 'border-gray-200 bg-white'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center text-xs ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+                        {isSelected && '✓'}
+                      </div>
+                      <span>{opt.text}</span>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         )}

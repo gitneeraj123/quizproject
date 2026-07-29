@@ -66,7 +66,7 @@ export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt 
           <h2 className="text-xl font-medium text-gray-700 mb-2">
             Upload lesson slides or <br/><span className="underline decoration-2 underline-offset-4 decoration-[#00B4D8]">any document</span>
           </h2>
-          <p className="text-sm text-gray-500 mb-8">PDF files up to 50 MB</p>
+          <p className="text-sm text-gray-500 mb-8">PDF files up to 10 MB</p>
           
           <input 
             type="file" 

@@ -19,7 +19,6 @@ export const createQuiz = async (req, res) => {
     const quiz = await Quiz.create(quizData);
     res.status(201).json({ success: true, data: quiz });
   } catch (error) {
-    console.error('Error creating quiz:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
@@ -29,11 +28,11 @@ export const createQuiz = async (req, res) => {
 export const getTeacherQuizzes = async (req, res) => {
   try {
     // 🔥 THE SLEDGEHAMMER FIX: Fetch ALL quizzes in the database to guarantee they show up
-    const quizzes = await Quiz.find().sort('-createdAt');
+    const userId = req.user?._id || req.user?.id;
+    const quizzes = await Quiz.find({ createdBy: userId }).sort('-createdAt');
     
     res.status(200).json({ success: true, data: quizzes });
   } catch (error) {
-    console.error('Error fetching quizzes:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };

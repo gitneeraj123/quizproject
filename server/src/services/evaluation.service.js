@@ -5,19 +5,23 @@
  * @returns {Object} Calculated metrics: score, totalQuestions, accuracy
  */
 export const evaluateSubmission = (quiz, studentAnswers) => {
-  let correctCount = 0;
   const totalQuestions = quiz.questions.length;
 
-  console.log("=== 🚀 GRADING NEW SUBMISSION ===");
+  // Bug #29: Guard against zero questions
+  if (totalQuestions === 0) {
+    return { score: 0, totalQuestions: 0, accuracy: 0 };
+  }
+
+  let correctCount = 0;
 
   quiz.questions.forEach((question, index) => {
-    // 1. Safely extract student answers (Forces into an array, fixes the '0 is empty' bug)
+    // Safely extract student answers
     let rawStudent = studentAnswers[index];
     const studentIndices = (rawStudent !== undefined && rawStudent !== null) 
       ? (Array.isArray(rawStudent) ? rawStudent : [rawStudent]) 
       : [];
 
-    // 2. Safely extract correct answers
+    // Safely extract correct answers
     let rawCorrect = question.correctAnswers;
     const actualCorrectRaw = (rawCorrect !== undefined && rawCorrect !== null) 
       ? (Array.isArray(rawCorrect) ? rawCorrect : [rawCorrect]) 
@@ -28,38 +32,39 @@ export const evaluateSubmission = (quiz, studentAnswers) => {
                         typeof actualCorrectRaw[0] === 'string' && 
                         isNaN(Number(actualCorrectRaw[0]));
 
-    let normalizedStudent = [];
-    let normalizedCorrect = [];
+    let isCorrect = false;
 
-    if (isTextBased) {
-      normalizedStudent = studentIndices.map(i => {
+    if (question.type === 'Fill in the Blank') {
+      const studentText = studentIndices[0]?.toString().trim().toLowerCase() || '';
+      const correctText = question.options[0]?.text?.toString().trim().toLowerCase() || '';
+      if (studentText === correctText && correctText !== '') {
+        isCorrect = true;
+      }
+    } else if (isTextBased) {
+      const normalizedStudent = studentIndices.map(i => {
         const opt = question.options[Number(i)];
         const text = typeof opt === 'string' ? opt : (opt?.text || '');
         return text.toString().trim().toLowerCase();
       }).sort();
       
-      normalizedCorrect = actualCorrectRaw.map(ans => ans.toString().trim().toLowerCase()).sort();
+      const normalizedCorrect = actualCorrectRaw.map(ans => ans.toString().trim().toLowerCase()).sort();
+      if (JSON.stringify(normalizedStudent) === JSON.stringify(normalizedCorrect)) {
+        isCorrect = true;
+      }
     } else {
-      normalizedStudent = studentIndices.map(Number).sort((a, b) => a - b);
-      normalizedCorrect = actualCorrectRaw.map(Number).sort((a, b) => a - b);
+      const normalizedStudent = studentIndices.map(Number).sort((a, b) => a - b);
+      const normalizedCorrect = actualCorrectRaw.map(Number).sort((a, b) => a - b);
+      if (JSON.stringify(normalizedStudent) === JSON.stringify(normalizedCorrect)) {
+        isCorrect = true;
+      }
     }
-    
-    // 🔥 DEBUGGING OUTPUT - Prints to your terminal!
-    console.log(`Q${index + 1}:`);
-    console.log(`  Student selected:`, normalizedStudent);
-    console.log(`  Actual correct:  `, normalizedCorrect);
 
-    if (JSON.stringify(normalizedStudent) === JSON.stringify(normalizedCorrect)) {
+    if (isCorrect) {
       correctCount++;
-      console.log(`  -> ✅ Correct`);
-    } else {
-      console.log(`  -> ❌ Wrong`);
     }
   });
 
-  const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-  console.log(`FINAL SCORE: ${correctCount} / ${totalQuestions}`);
-  console.log("=================================");
+  const accuracy = Math.round((correctCount / totalQuestions) * 100);
 
   return {
     score: correctCount,

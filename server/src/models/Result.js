@@ -14,10 +14,21 @@ const ResultSchema = new mongoose.Schema({
   totalQuestions: { type: Number, required: true },
   accuracy: { type: Number, required: true },
   
-  // Storing what they actually picked: { "0": [1, 2], "1": [0] }
-  studentAnswers: { type: Map, of: [Number] },
+  // Storing what they actually picked: { "0": [1, 2], "1": ["Paris"] }
+  studentAnswers: { type: Map, of: mongoose.Schema.Types.Mixed },
+  quizSnapshot: {
+    title: String,
+    questions: [{
+      question: String,
+      type: { type: String },
+      options: [{ text: String }],
+      correctAnswers: [Number]
+    }]
+  },
   
   completedAt: { type: Date, default: Date.now }
 });
+
+ResultSchema.index({ quizId: 1, studentIdentifier: 1 }, { unique: true });
 
 export default mongoose.model('Result', ResultSchema);

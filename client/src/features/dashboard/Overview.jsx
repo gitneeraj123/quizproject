@@ -87,10 +87,14 @@ export default function Overview() {
                   {/* 4. Added the Take Assessment Button */}
                   <td className="px-6 py-4 text-right">
                     <button 
-                      onClick={() => navigate(`/quiz/${quiz._id}`)}
+                      onClick={() => {
+                        const link = `${window.location.origin}/take-quiz/${quiz._id}`;
+                        navigator.clipboard.writeText(link);
+                        alert('Student link copied to clipboard!');
+                      }}
                       className="px-4 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition shadow"
                     >
-                      Take Assessment
+                      Copy Student Link
                     </button>
                   </td>
                 </tr>

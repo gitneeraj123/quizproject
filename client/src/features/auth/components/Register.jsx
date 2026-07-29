@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../services/api';
 
 export default function Register() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', organization: '' });
@@ -13,7 +13,7 @@ export default function Register() {
     setIsLoading(true);
     try {
       // Direct call for now, could be moved to authSlice later
-      await axios.post('http://localhost:5000/api/v1/auth/register', formData);
+      await api.post('/auth/register', formData);
       alert('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {

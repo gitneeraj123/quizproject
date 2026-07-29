@@ -2,10 +2,29 @@ import Groq from 'groq-sdk';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+/**
+ * Validates that the parsed AI response has the expected shape.
+ * Each question must have: question (string), options (array of >=2), correctAnswers (array of numbers).
+ */
+function validateQuizShape(data) {
+  if (!data || !Array.isArray(data.questions)) {
+    throw new Error('AI response missing "questions" array.');
+  }
+
+  data.questions.forEach((q, i) => {
+    if (!q.question || typeof q.question !== 'string') {
+      throw new Error(`Question ${i + 1}: missing or invalid "question" text.`);
+    }
+    if (!Array.isArray(q.options) || q.options.length < 2) {
+      throw new Error(`Question ${i + 1}: must have at least 2 options.`);
+    }
+  });
+}
+
 export const generateQuizFromText = async (textContent, gradeLevel, questionCount) => {
   try {
     const prompt = `
-      You are an expert assessment generator. Analyze the following content and generate exactly ${questionCount} high-quality quiz questions tailored for${gradeLevel} students.
+      You are an expert assessment generator. Analyze the following content and generate exactly ${questionCount} high-quality quiz questions tailored for ${gradeLevel} students.
       
       Content:
       "${textContent}"
@@ -56,52 +75,62 @@ export const generateQuizFromText = async (textContent, gradeLevel, questionCoun
 
     const data = JSON.parse(cleanJsonString);
 
-    // 2. The Unbreakable Shuffle Logic
+    // Bug #22: Validate the shape of the parsed AI response
+    validateQuizShape(data);
+
+    // Shuffle options and remap correct answers
     if (data.questions && Array.isArray(data.questions)) {
       data.questions = data.questions.map((q) => {
-        if (!q.options) return q;
+        if (!q.options || q.options.length < 2) return q;
 
-        // LLMs are stubborn. Let's catch ALL possible names it might use for the answer key:
+        // Normalize the answer key from various LLM formats
         let rawAnswers = q.correctAnswers !== undefined ? q.correctAnswers 
                        : (q.correctAnswer !== undefined ? q.correctAnswer 
                        : (q.correctAnswerIndex !== undefined ? q.correctAnswerIndex : [0]));
                        
-        // Force it into a strict array format
-        const answerIndices = Array.isArray(rawAnswers) ? rawAnswers : [rawAnswers];
+        const answerIndices = Array.isArray(rawAnswers) ? rawAnswers.map(Number) : [Number(rawAnswers)];
 
-        // Safely extract what the correct answer ACTUALLY says
-        const correctTexts = answerIndices.map(idx => {
-           const opt = q.options[idx];
-           return typeof opt === 'string' ? opt : (opt?.text || '');
-        });
-
-        // True Randomization: Fisher-Yates Shuffle algorithm
-        const shuffled = [...q.options];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        // Bug #23: Filter out any out-of-bounds indices
+        const validAnswerIndices = answerIndices.filter(idx => idx >= 0 && idx < q.options.length);
+        if (validAnswerIndices.length === 0) {
+          throw new Error(`Question "${q.question.substring(0, 50)}..." has no valid correctAnswers indices.`);
         }
 
-        // Find the new index of the correct answer in the freshly shuffled array
+        // Bug #21: Track correct answers by original index, not text matching
+        // Tag each option with its original index before shuffling
+        const taggedOptions = q.options.map((opt, idx) => ({
+          ...opt,
+          _originalIndex: idx
+        }));
+
+        // Fisher-Yates shuffle
+        const shuffled = [...taggedOptions];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        // Find the new indices of the correct answers using original index tracking
         const newIndices = shuffled
-          .map((opt, i) => {
-             const optText = typeof opt === 'string' ? opt : (opt?.text || '');
-             return correctTexts.includes(optText) ? i : -1;
-          })
+          .map((opt, newIdx) => validAnswerIndices.includes(opt._originalIndex) ? newIdx : -1)
           .filter(idx => idx !== -1);
+
+        // Remove the tracking tag before returning
+        const cleanOptions = shuffled.map(({ _originalIndex, ...rest }) => rest);
 
         return { 
           ...q, 
-          options: shuffled, 
-          // Always return the exact key name the frontend is looking for
-          correctAnswers: newIndices.length > 0 ? newIndices : [0] 
+          options: cleanOptions, 
+          correctAnswers: newIndices
         };
       });
     }
 
     return data;
   } catch (error) {
-    console.error('Error in Groq AI Service:', error);
-    throw new Error('Failed to parse AI response into structural quiz data.');
+    if (error instanceof SyntaxError) {
+      throw new Error('Failed to parse AI response as valid JSON.');
+    }
+    throw error;
   }
 };
