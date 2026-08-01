@@ -30,7 +30,7 @@ const QuizSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'published'],
+    enum: ['draft', 'published', 'closed'],
     default: 'published'
   },
   questions: [QuestionSchema],
@@ -39,6 +39,10 @@ const QuizSchema = new mongoose.Schema({
     type: String,
     enum: ['session', 'question'],
     default: 'session'
+  },
+  startsAt: {
+    type: Date,
+    default: null
   },
   expiresAt: {
     type: Date,

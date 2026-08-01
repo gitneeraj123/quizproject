@@ -31,6 +31,7 @@ export const generateQuizFromText = async (textContent, gradeLevel, questionCoun
 
       CRITICAL INSTRUCTIONS:
       1. You MUST respond ONLY with a valid JSON object. Do not include markdown formatting, markdown code blocks (such as \`\`\`json), or any conversational text.
+      2. You MUST generate EXACTLY ${questionCount} questions. Do not stop early. Your "questions" array must contain exactly ${questionCount} items.
       
       The JSON object must match this exact structure layout:
       {
@@ -62,17 +63,19 @@ export const generateQuizFromText = async (textContent, gradeLevel, questionCoun
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
       model: "llama-3.1-8b-instant", 
-      temperature: 0.3, 
+      temperature: 0.3,
+      max_tokens: 3500,
+      response_format: { type: "json_object" }
     });
 
     const responseText = chatCompletion.choices[0]?.message?.content?.trim() || '';
     
-    const cleanJsonString = responseText
-      .replace(/^```json/i, '')
-      .replace(/^```/, '')
-      .replace(/```$/, '')
-      .trim();
-
+    let cleanJsonString = responseText;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanJsonString = jsonMatch[0];
+    }
+    
     const data = JSON.parse(cleanJsonString);
 
     // Bug #22: Validate the shape of the parsed AI response

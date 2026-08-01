@@ -6,7 +6,7 @@ import { evaluateSubmission } from '../services/evaluation.service.js';
 // @route   POST /api/v1/results
 export const submitResult = async (req, res) => {
   try {
-    const { quizId, studentName, studentIdentifier, studentAnswers } = req.body;
+    const { quizId, studentName, studentIdentifier, studentAnswers, tabSwitchCount } = req.body;
 
     const quiz = await Quiz.findById(quizId);
     if (!quiz) {
@@ -44,6 +44,7 @@ export const submitResult = async (req, res) => {
       totalQuestions,
       accuracy,
       studentAnswers,
+      tabSwitchCount: tabSwitchCount || 0,
       quizSnapshot
     });
 

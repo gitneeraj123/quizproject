@@ -39,7 +39,7 @@ app.use(helmet());
 // 3. Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, 
-  max: 100, 
+  max: 1000, 
   message: 'Too many requests from this IP, please try again in 10 minutes.',
 });
 app.use('/api', globalLimiter);

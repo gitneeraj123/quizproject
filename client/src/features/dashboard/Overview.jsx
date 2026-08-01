@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Added React Router navigation
 import api from '../../services/api'; 
 
 export default function Overview() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // 2. Initialize navigate
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -24,15 +20,12 @@ export default function Overview() {
     fetchQuizzes();
   }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-  };
+
 
   if (loading) return <div className="p-8 text-gray-500">Loading Dashboard...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
+
+  const activeQuizzes = quizzes.filter(q => q.status !== 'closed');
 
   return (
     <div className="max-w-6xl mx-auto mt-8 p-6">
@@ -59,8 +52,8 @@ export default function Overview() {
           <h2 className="text-lg font-semibold text-gray-800">Recent Quizzes</h2>
         </div>
         
-        {quizzes.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 italic">No quizzes created yet.</div>
+        {activeQuizzes.length === 0 ? (
+          <div className="p-6 text-center text-gray-500 italic">No active quizzes right now.</div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
@@ -74,14 +67,18 @@ export default function Overview() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {quizzes.map((quiz) => (
+              {activeQuizzes.map((quiz) => (
                 <tr key={quiz._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-gray-900">{quiz.title}</td>
                   <td className="px-6 py-4 text-gray-600">{quiz.questions?.length || 0} items</td>
-                  <td className="px-6 py-4 text-gray-600">{quiz.durationMinutes} min</td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {quiz.questions?.reduce((sum, q) => sum + (q.timeLimit || 1), 0) || 0} min
+                  </td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {quiz.status || 'Active'}
+                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      quiz.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {quiz.status === 'published' ? 'Active' : quiz.status}
                     </span>
                   </td>
                   {/* 4. Added the Take Assessment Button */}

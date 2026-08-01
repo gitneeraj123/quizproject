@@ -16,6 +16,7 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
     visibility: 'Restricted',
     coverImage: null,
     timerType: 'session', 
+    startsAt: '',
     expiresAt: ''         
   });
   
@@ -76,6 +77,10 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
   };
 
   const handleSaveQuestion = () => {
+    if (!editData.question || editData.question.trim() === '') {
+      alert('Question text cannot be empty.');
+      return;
+    }
     if (editIndex !== null) {
       const updated = [...questions];
       updated[editIndex] = editData;
@@ -158,6 +163,7 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
         visibility: publishForm.visibility,
         coverImage: publishForm.coverImage,
         timerType: publishForm.timerType, 
+        startsAt: publishForm.startsAt || null, 
         expiresAt: publishForm.expiresAt || null, 
         questions: validQuestions 
       };
@@ -243,6 +249,8 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
                   value={editData.question}
                   onChange={(e) => setEditData({...editData, question: e.target.value})}
                   placeholder="Type question here"
+                  lang="und"
+                  spellCheck="false"
                   className="w-full h-full bg-transparent text-white text-2xl outline-none resize-none placeholder-gray-400 text-center"
                />
                <label className="absolute bottom-4 right-4 text-gray-400 hover:text-white bg-white/10 px-3 py-1 rounded text-sm cursor-pointer transition-colors">
@@ -262,6 +270,8 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
                       setEditData({...editData, options: newOpts});
                     }}
                     placeholder="Type the exact correct answer here"
+                    lang="und"
+                    spellCheck="false"
                     className="w-full max-w-md bg-white/20 text-white text-center text-xl p-3 rounded outline-none placeholder-white/70 border border-white/30 focus:bg-white/30 transition-colors"
                  />
               </div>
@@ -288,6 +298,8 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
                       }}
                       placeholder="Type answer here"
                       readOnly={editData.type === 'True or False'}
+                      lang="und"
+                      spellCheck="false"
                       className={`w-full bg-transparent text-white text-center text-sm outline-none resize-none placeholder-white/70 flex-1 ${editData.type === 'True or False' ? 'text-2xl font-bold font-sans' : ''}`}
                     />
                   </div>
@@ -329,30 +341,77 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Subject</label>
-                  <select value={publishForm.subject} onChange={e => setPublishForm({...publishForm, subject: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none">
+                  <select
+                    value={['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography'].includes(publishForm.subject) ? publishForm.subject : 'Custom'}
+                    onChange={e => setPublishForm({...publishForm, subject: e.target.value === 'Custom' ? '' : e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none"
+                  >
                     <option>Computer Science</option>
                     <option>Mathematics</option>
+                    <option>Physics</option>
+                    <option>Chemistry</option>
+                    <option>Biology</option>
+                    <option>English</option>
+                    <option>History</option>
+                    <option>Geography</option>
+                    <option value="Custom">Other (type your own)</option>
                   </select>
+                  {!['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography'].includes(publishForm.subject) && (
+                    <input
+                      type="text"
+                      value={publishForm.subject}
+                      onChange={e => setPublishForm({...publishForm, subject: e.target.value})}
+                      placeholder="Enter custom subject name"
+                      className="w-full mt-2 border border-gray-300 rounded-lg p-3 font-medium outline-none focus:border-pink-500"
+                      autoFocus
+                    />
+                  )}
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Grade</label>
-                  <select value={publishForm.grade} onChange={e => setPublishForm({...publishForm, grade: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none">
+                  <select
+                    value={['6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade', 'Undergraduate', 'Graduate'].includes(publishForm.grade) ? publishForm.grade : 'Custom'}
+                    onChange={e => setPublishForm({...publishForm, grade: e.target.value === 'Custom' ? '' : e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none"
+                  >
+                    <option>6th Grade</option>
+                    <option>7th Grade</option>
+                    <option>8th Grade</option>
+                    <option>9th Grade</option>
                     <option>10th Grade</option>
+                    <option>11th Grade</option>
                     <option>12th Grade</option>
+                    <option>Undergraduate</option>
+                    <option>Graduate</option>
+                    <option value="Custom">Other (type your own)</option>
                   </select>
+                  {!['6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade', 'Undergraduate', 'Graduate'].includes(publishForm.grade) && (
+                    <input
+                      type="text"
+                      value={publishForm.grade}
+                      onChange={e => setPublishForm({...publishForm, grade: e.target.value})}
+                      placeholder="Enter custom grade/level"
+                      className="w-full mt-2 border border-gray-300 rounded-lg p-3 font-medium outline-none focus:border-pink-500"
+                      autoFocus
+                    />
+                  )}
                 </div>
               </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="w-full">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Timer Mode</label>
                   <select value={publishForm.timerType} onChange={e => setPublishForm({...publishForm, timerType: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none">
                     <option value="session">Overall Assessment Timer</option>
                     <option value="question">Per-Question Timer</option>
                   </select>
                 </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Deadline / Expiry (Optional)</label>
-                  <input type="datetime-local" value={publishForm.expiresAt} onChange={e => setPublishForm({...publishForm, expiresAt: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none" />
+                <div className="w-full min-w-0">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Start Time (Optional)</label>
+                  <input type="datetime-local" value={publishForm.startsAt} onChange={e => setPublishForm({...publishForm, startsAt: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none focus:border-pink-500" />
+                </div>
+                <div className="w-full min-w-0">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Deadline (Optional)</label>
+                  <input type="datetime-local" value={publishForm.expiresAt} onChange={e => setPublishForm({...publishForm, expiresAt: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none focus:border-pink-500" />
                 </div>
               </div>
               <div>

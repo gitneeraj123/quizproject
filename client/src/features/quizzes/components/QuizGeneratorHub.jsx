@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import api from '../../../services/api';
 
-export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt }) {
+export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt, onCreateManually }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
@@ -59,7 +59,7 @@ export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt 
       )}
 
       {/* Two-Column Grid for a balanced, clean UI */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* Left Column: Device File Upload */}
         <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center shadow-sm hover:border-[#00B4D8] transition-colors flex flex-col justify-center items-center h-72">
@@ -104,6 +104,20 @@ export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt 
               className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-50 cursor-pointer"
             />
           </div>
+        </div>
+
+        {/* Third Column: Manual Creation */}
+        <div 
+          onClick={onCreateManually}
+          className="bg-white border-2 border-gray-100 rounded-2xl p-10 shadow-sm hover:border-[#00B4D8] hover:shadow-md transition cursor-pointer flex flex-col justify-center items-center text-center h-72"
+        >
+          <div className="text-4xl mb-3">✍️</div>
+          <h3 className="font-bold text-gray-800 text-xl mb-3">
+            Create manually
+          </h3>
+          <p className="text-sm text-gray-500">
+            Skip AI and build your quiz question-by-question from a blank assessment.
+          </p>
         </div>
 
       </div>

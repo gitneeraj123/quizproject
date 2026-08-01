@@ -15,17 +15,13 @@ export default function ReportDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch both the student results AND the original quiz data concurrently
-        const [reportsRes, quizRes] = await Promise.all([
-          api.get(`/results/quiz/${quizId}`),
-          
-          // 🔥 THE FIX: Ask for the Teacher version of the quiz, NOT the /student version!
-          // This ensures the backend sends the correctAnswers key so we can grade it visually.
-          api.get(`/quizzes/${quizId}`) 
-        ]);
-        
+        const reportsRes = await api.get(`/results/quiz/${quizId}`);
         setReports(reportsRes.data.data);
-        setQuiz(quizRes.data.data || quizRes.data);
+
+        // Use each result's own snapshot instead of a live quiz fetch — this keeps
+        // reports working even after the original Quiz document is deleted.
+        const firstSnapshot = reportsRes.data.data?.[0]?.quizSnapshot;
+        setQuiz(firstSnapshot || null);
       } catch (err) {
         console.error('Failed to fetch report details:', err);
         setError('Could not retrieve detailed results. Verify your connection.');
@@ -108,6 +104,11 @@ export default function ReportDetail() {
                     <td className="p-4 text-sm text-gray-600">{report.studentIdentifier || 'N/A'}</td>
                     <td className="p-4 text-sm font-medium text-gray-700">
                       {report.score} / {report.totalQuestions}
+                      {report.tabSwitchCount > 0 && (
+                        <span className="ml-2 px-2 py-0.5 text-xs font-bold text-amber-700 bg-amber-100 rounded-full">
+                          ⚠️ Left tab {report.tabSwitchCount}x
+                        </span>
+                      )}
                     </td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${

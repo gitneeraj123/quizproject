@@ -26,7 +26,8 @@ const ResultSchema = new mongoose.Schema({
     }]
   },
   
-  completedAt: { type: Date, default: Date.now }
+  completedAt: { type: Date, default: Date.now },
+  tabSwitchCount: { type: Number, default: 0 }
 });
 
 ResultSchema.index({ quizId: 1, studentIdentifier: 1 }, { unique: true });

@@ -13,6 +13,11 @@ export default function QuizInit() {
     setCurrentStep('editor');
   };
 
+  const handleCreateManually = () => {
+    setAiGeneratedQuestions([]); // Start with zero questions — teacher builds from scratch
+    setCurrentStep('editor');
+  };
+
   return (
     <div className="w-full min-h-[calc(100vh-64px)] bg-[#F8F9FA] flex flex-col items-center pt-8 pb-12">
       
@@ -35,6 +40,7 @@ export default function QuizInit() {
         <QuizGeneratorHub 
           onQuestionsGenerated={handleQuestionsGenerated} 
           onSelectPrompt={() => setCurrentStep('prompt')} 
+          onCreateManually={handleCreateManually}
         />
       )}
 
