@@ -37,6 +37,8 @@ app.use(cors({
 app.use(helmet());
 
 // 3. Global Rate Limiting
+app.set('trust proxy', 1); // CRITICAL: Required for Render (or any reverse proxy) to correctly identify client IPs
+
 const globalLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, 
   max: 1000, 
