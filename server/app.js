@@ -79,6 +79,16 @@ app.use('/api/v1/results', resultRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
 
+// Health Check API
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server is healthy and running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // TODO (Bug #27): Timer enforcement should be server-side.
 // Currently the quiz timer is only enforced on the client via setInterval.
 // A production-grade implementation should record the start time server-side
