@@ -17,9 +17,12 @@ export default function TakeQuiz() {
   const [hasStarted, setHasStarted] = useState(false);
 
   // --- SECTIONS & QUESTION STATE ---
-  const [sections, setSections] = useState([]); // Array of section names
-  const [activeSection, setActiveSection] = useState(''); // Currently clicked tab
-  const [currentQuestion, setCurrentQuestion] = useState(0); // Index relative to current section
+  /* FUTURE ENHANCEMENT: Sections State 
+  const [sections, setSections] = useState([]); 
+  const [activeSection, setActiveSection] = useState(''); 
+  */
+  
+  const [currentQuestion, setCurrentQuestion] = useState(0); // Global Question Index
   const [answers, setAnswers] = useState({}); // Unique map key format: "globalIndex": [selections]
   
   const [timeLeft, setTimeLeft] = useState(null);
@@ -28,7 +31,7 @@ export default function TakeQuiz() {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [markedForReview, setMarkedForReview] = useState({});
 
-  // 1. Fetch Assessment Data & Map Sections
+  // 1. Fetch Assessment Data
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -42,14 +45,15 @@ export default function TakeQuiz() {
           setIsExpired(true);
         }
         
-        // Extract unique section names from questions array
+        /* FUTURE ENHANCEMENT: Extract unique section names
         const uniqueSections = Array.from(
           new Set(quizData.questions.map(q => q.section || 'General Focus'))
         );
-        
-        setQuiz(quizData);
         setSections(uniqueSections);
         setActiveSection(uniqueSections[0] || '');
+        */
+        
+        setQuiz(quizData);
         setLoading(false);
       } catch (err) {
         setError('Quiz not found or link is invalid.');
@@ -63,7 +67,7 @@ export default function TakeQuiz() {
   useEffect(() => {
     if (hasStarted && quiz && quiz.questions) {
       if (quiz.timerType === 'question') {
-        const currentGlobalQ = getFilteredQuestions()[currentQuestion];
+        const currentGlobalQ = quiz.questions[currentQuestion];
         const currentQTime = currentGlobalQ?.timeLimit || 1;
         setTimeLeft(currentQTime * 60);
       } else if (timeLeft === null) {
@@ -72,7 +76,7 @@ export default function TakeQuiz() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasStarted, quiz, currentQuestion, activeSection]);
+  }, [hasStarted, quiz, currentQuestion]);
 
   // 3. Countdown Counter Engine
   useEffect(() => {
@@ -126,27 +130,28 @@ export default function TakeQuiz() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [hasStarted, result]);
 
-  // Helper to get questions belonging to the active section tab
-  function getFilteredQuestions() {
-    if (!quiz) return [];
-    return quiz.questions.map((q, originalIdx) => ({ ...q, originalIdx }))
-                         .filter(q => (q.section || 'General Focus') === activeSection);
-  };
-
   function handleNextOrAdvance() {
+    const total = quiz.questions.length;
+    if (currentQuestion < total - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    } else {
+      handleSubmit(); // Out of questions entirely
+    }
+
+    /* FUTURE ENHANCEMENT: Section Jump Logic
     const filtered = getFilteredQuestions();
     if (currentQuestion < filtered.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
-      // If last question in section, check if there's a next section tab
       const currentSectionIdx = sections.indexOf(activeSection);
       if (currentSectionIdx < sections.length - 1) {
         setActiveSection(sections[currentSectionIdx + 1]);
         setCurrentQuestion(0);
       } else {
-        handleSubmit(); // Out of questions entirely
+        handleSubmit();
       }
     }
+    */
   };
 
   const formatTime = (seconds) => {
@@ -197,7 +202,7 @@ export default function TakeQuiz() {
     setIsSubmitting(false);
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl text-gray-500">Loading Section Quiz...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl text-gray-500">Loading Assessment...</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center font-bold text-xl text-red-500">{error}</div>;
 
   if (isNotLiveYet && quiz) {
@@ -264,9 +269,9 @@ export default function TakeQuiz() {
     );
   }
 
-  const activeQuestions = getFilteredQuestions();
-  const q = activeQuestions[currentQuestion];
-  const globalIdx = q?.originalIdx;
+  // Without sections, currentQuestion is exactly the global index
+  const q = quiz.questions[currentQuestion];
+  const globalIdx = currentQuestion;
   const selectedOptions = answers[globalIdx] || [];
 
   return (
@@ -286,35 +291,21 @@ export default function TakeQuiz() {
           </div>
         </div>
 
-        {/* 🔥 DYNAMIC SECTION TABS */}
+        {/* FUTURE ENHANCEMENT: DYNAMIC SECTION TABS */}
+        {/*
         <div className="flex border-b border-gray-200 gap-2 mb-6 overflow-x-auto whitespace-nowrap scrollbar-none">
           {sections.map((secName) => (
-            <button
-              key={secName}
-              onClick={() => {
-                if (quiz.timerType !== 'question') { // Lock tab swapping if strict per-question timing is active
-                  setActiveSection(secName);
-                  setCurrentQuestion(0);
-                }
-              }}
-              disabled={quiz.timerType === 'question'}
-              className={`px-5 py-2.5 text-sm font-bold border-b-2 transition-all ${
-                activeSection === secName 
-                  ? 'border-indigo-600 text-indigo-600 bg-indigo-50/30' 
-                  : 'border-transparent text-gray-400 hover:text-gray-700'
-              } ${quiz.timerType === 'question' ? 'cursor-not-allowed opacity-70' : ''}`}
-            >
-              {secName}
-            </button>
+             ...
           ))}
         </div>
+        */}
 
         {/* Question Frame */}
         {q && (
           <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm mb-6">
             <div className="flex justify-between items-center mb-2">
               <div className="text-xs font-bold uppercase tracking-wider text-indigo-500">
-                Question {currentQuestion + 1} of {activeQuestions.length} inside {activeSection}
+                Question {currentQuestion + 1} of {quiz.questions.length}
               </div>
               <button
                 onClick={() => toggleMarkForReview(globalIdx)}
@@ -375,7 +366,7 @@ export default function TakeQuiz() {
             ← Previous Question
           </button>
 
-          {currentQuestion === activeQuestions.length - 1 && sections.indexOf(activeSection) === sections.length - 1 ? (
+          {currentQuestion === quiz.questions.length - 1 ? (
             <button onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md">
               Submit Assessment
             </button>
@@ -397,19 +388,11 @@ export default function TakeQuiz() {
               {quiz.questions.map((question, idx) => {
                 const isAnswered = answers[idx] && answers[idx].length > 0 && answers[idx][0] !== '';
                 const isMarked = markedForReview[idx];
-                const isCurrent = idx === globalIdx;
-
-                // Find which section/local index this global question maps to, so clicking it navigates correctly
-                const targetSection = question.section || 'General Focus';
-                const questionsInTargetSection = quiz.questions
-                  .map((qq, i) => ({ ...qq, originalIdx: i }))
-                  .filter(qq => (qq.section || 'General Focus') === targetSection);
-                const localIndex = questionsInTargetSection.findIndex(qq => qq.originalIdx === idx);
+                const isCurrent = idx === currentQuestion;
 
                 const handleJump = () => {
-                  if (quiz.timerType === 'question') return; // Lock navigation in strict per-question timer mode
-                  setActiveSection(targetSection);
-                  setCurrentQuestion(localIndex);
+                  if (quiz.timerType === 'question') return; 
+                  setCurrentQuestion(idx);
                 };
 
                 let colorClass = 'bg-gray-100 text-gray-500 border-gray-200'; // unanswered
