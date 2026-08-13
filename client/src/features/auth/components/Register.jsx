@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../authSlice';
 import api from '../../../services/api';
 
 export default function Register() {
@@ -7,15 +9,25 @@ export default function Register() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Direct call for now, could be moved to authSlice later
-      await api.post('/auth/register', formData);
-      alert('Registration successful! Please log in.');
-      navigate('/login');
+      // 1. Register the user and capture the tokens sent back by the backend
+      const res = await api.post('/auth/register', formData);
+      const { user, accessToken } = res.data;
+
+      // 2. Save tokens to localStorage so they persist across refreshes
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // 3. Hydrate the Redux store
+      dispatch(setCredentials({ user, accessToken }));
+
+      // 4. Instantly auto-login and navigate to the dashboard!
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
