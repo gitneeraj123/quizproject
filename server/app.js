@@ -6,8 +6,6 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 // Import Routes
 import authRoutes from './src/routes/auth.routes.js';
@@ -16,9 +14,6 @@ import resultRoutes from './src/routes/result.routes.js';
 import aiRoutes from './src/routes/ai.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -70,9 +65,6 @@ app.use((req, res, next) => {
   if (req.params) mongoSanitize.sanitize(req.params, { replaceWith: '_' });
   next();
 });
-
-// 6. Serve uploaded files statically (Bug #9)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Mount API Routes
 app.use('/api/v1/auth', authRoutes);

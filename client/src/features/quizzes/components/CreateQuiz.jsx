@@ -138,7 +138,7 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
       }
     } catch (error) {
       console.error('Image upload failed:', error);
-      alert('Failed to upload image. Please try again.');
+      alert(error.response?.data?.message || 'Failed to upload image. Please try again.');
     }
   };
 

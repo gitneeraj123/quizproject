@@ -89,6 +89,9 @@ MONGO_URI=your_mongodb_connection_string
 JWT_ACCESS_SECRET=replace_with_a_strong_secret
 JWT_REFRESH_SECRET=replace_with_a_different_strong_secret
 GROQ_API_KEY=your_groq_api_key
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 CLIENT_URL=http://localhost:5173
 NODE_ENV=development
 ```
