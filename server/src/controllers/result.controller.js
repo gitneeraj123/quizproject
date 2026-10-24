@@ -31,7 +31,8 @@ export const submitResult = async (req, res) => {
       questions: quiz.questions.map(q => ({
         question: q.question,
         type: q.type,
-        options: (q.options || []).map(o => ({ text: o.text })),
+        imageUrl: q.imageUrl,
+        options: (q.options || []).map(o => ({ text: o.text, imageUrl: o.imageUrl })),
         correctAnswers: q.correctAnswers
       }))
     };

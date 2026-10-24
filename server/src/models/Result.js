@@ -21,7 +21,8 @@ const ResultSchema = new mongoose.Schema({
     questions: [{
       question: String,
       type: { type: String },
-      options: [{ text: String }],
+      imageUrl: String,
+      options: [{ text: String, imageUrl: String }],
       correctAnswers: [Number]
     }]
   },

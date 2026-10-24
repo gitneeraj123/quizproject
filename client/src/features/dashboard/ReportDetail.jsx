@@ -5,7 +5,8 @@ import api from '../../services/api';
 export default function ReportDetail() {
   const { quizId } = useParams();
   const [reports, setReports] = useState([]);
-  const [quiz, setQuiz] = useState(null);
+  // Original quiz — only used to fill in images that results submitted before images were saved don't have
+  const [liveQuiz, setLiveQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -18,10 +19,11 @@ export default function ReportDetail() {
         const reportsRes = await api.get(`/results/quiz/${quizId}`);
         setReports(reportsRes.data.data);
 
-        // Use each result's own snapshot instead of a live quiz fetch — this keeps
-        // reports working even after the original Quiz document is deleted.
-        const firstSnapshot = reportsRes.data.data?.[0]?.quizSnapshot;
-        setQuiz(firstSnapshot || null);
+        // Each result carries its own quiz snapshot, so reports work without the original quiz.
+        // The live quiz is optional: it only backfills images for older results.
+        api.get(`/quizzes/${quizId}`)
+          .then(res => setLiveQuiz(res.data.data))
+          .catch(() => {});
       } catch (err) {
         console.error('Failed to fetch report details:', err);
         setError('Could not retrieve detailed results. Verify your connection.');
@@ -32,6 +34,10 @@ export default function ReportDetail() {
 
     fetchData();
   }, [quizId]);
+
+  // Results saved before snapshots included images have no imageUrl; borrow it from the live quiz.
+  // Quizzes can't be edited after publishing, so question/option positions still line up.
+  const imageFor = (snapshotItem, liveItem) => snapshotItem?.imageUrl || liveItem?.imageUrl || null;
 
   const toggleRow = (reportId) => {
     setExpandedRow(expandedRow === reportId ? null : reportId);
@@ -129,7 +135,7 @@ export default function ReportDetail() {
                   </tr>
 
                   {/* Expanded Detailed Review Row */}
-                  {expandedRow === report._id && quiz && quiz.questions && (
+                  {expandedRow === report._id && report.quizSnapshot?.questions && (
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <td colSpan="5" className="p-6">
                         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-inner">
@@ -138,7 +144,9 @@ export default function ReportDetail() {
                           </h3>
                           
                           <div className="space-y-6">
-                            {quiz.questions.map((question, index) => {
+                            {report.quizSnapshot.questions.map((question, index) => {
+                              const liveQuestion = liveQuiz?.questions?.[index];
+                              const questionImage = imageFor(question, liveQuestion);
                               // Safely extract what the student selected
                               const studentRaw = report.studentAnswers?.[index];
                               const studentSelectedIndices = Array.isArray(studentRaw) 
@@ -147,6 +155,9 @@ export default function ReportDetail() {
                               
                               return (
                                 <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                  {questionImage && (
+                                    <img src={questionImage} alt={`Question ${index + 1}`} className="max-h-48 max-w-full mb-3 rounded border border-gray-200" />
+                                  )}
                                   <p className="font-bold text-gray-900 mb-3">
                                     <span className="text-gray-400 mr-2">{index + 1}.</span> 
                                     {question.question}
@@ -175,7 +186,12 @@ export default function ReportDetail() {
                                       return (
                                         <div key={optIdx} className={`px-3 py-2 rounded-md border border-transparent flex items-start gap-2 text-sm ${isSelected ? statusClass : ''} ${!isSelected && isCorrectAnswer ? statusClass : ''}`}>
                                           <span className="mt-0.5">{icon}</span>
-                                          <span>{typeof opt === 'string' ? opt : opt.text}</span>
+                                          <div className="flex flex-col gap-1">
+                                            {imageFor(opt, liveQuestion?.options?.[optIdx]) && (
+                                              <img src={imageFor(opt, liveQuestion?.options?.[optIdx])} alt={`Option ${optIdx + 1}`} className="max-h-20 max-w-full object-contain rounded" />
+                                            )}
+                                            <span>{typeof opt === 'string' ? opt : opt.text}</span>
+                                          </div>
                                           {isSelected && !isCorrectAnswer && <span className="ml-auto text-xs font-bold text-red-500 uppercase tracking-wider">Student Selected</span>}
                                           {isSelected && isCorrectAnswer && <span className="ml-auto text-xs font-bold text-green-500 uppercase tracking-wider">Correct</span>}
                                         </div>
