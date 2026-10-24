@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { registerUser } from '../authSlice';
 
 export default function Register() {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', organization: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -36,10 +36,6 @@ export default function Register() {
           <div>
             <label className="block text-sm font-medium text-primary mb-1">Full Name</label>
             <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-1 focus:ring-primary" placeholder="Jane Doe" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-primary mb-1">Organization</label>
-            <input type="text" required value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-1 focus:ring-primary" placeholder="Hogwarts or Google" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary mb-1">Email</label>

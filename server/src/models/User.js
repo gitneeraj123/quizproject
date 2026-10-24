@@ -25,12 +25,6 @@ const userSchema = new mongoose.Schema(
       minlength: [8, 'Password must be at least 8 characters'],
       select: false, 
     },
-    organization: {
-      type: String,
-      required: [true, 'Organization name is required'],
-      trim: true,
-      index: true, // tells MongoDB to index this field, making queries like "Find all users in Organization X" much faster.
-    },
     role: { 
       type: String, 
       enum: ['teacher'],

@@ -28,20 +28,19 @@ const toUserJSON = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
-  organization: user.organization,
   role: user.role,
 });
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, organization } = req.body;
+    const { name, email, password } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password, organization });
+    const user = await User.create({ name, email, password });
     const { accessToken, refreshToken } = generateTokens(user._id);
     
     user.refreshToken = refreshToken;

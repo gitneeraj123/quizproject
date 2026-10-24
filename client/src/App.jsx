@@ -42,7 +42,6 @@ const DashboardLayout = ({ children }) => {
       <aside className="w-64 bg-surface border-r border-border flex flex-col">
         <div className="p-6 border-b border-border">
           <h2 className="text-lg font-bold text-pink-600">QuizPlatform</h2>
-          <p className="text-xs text-gray-500 mt-1">{user?.organization || 'Workspace'}</p>
           <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-xs font-semibold rounded uppercase tracking-wide text-gray-600">
             {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Teacher'}
           </span>

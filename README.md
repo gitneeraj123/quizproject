@@ -29,7 +29,6 @@ A full-stack **MERN** application for educators to create, schedule, and manage 
 - Create and manage quizzes.
 - Navigate large assessments with a question navigator designed to support 100+ questions.
 - Responsive interface built with React and Tailwind CSS.
-- Custom organization branding support.
 
 ## Technology stack
 
