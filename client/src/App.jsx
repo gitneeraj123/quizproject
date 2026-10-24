@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from './features/auth/authSlice';
+import { logoutUser, restoreSession } from './features/auth/authSlice';
 
 // --- COMPONENTS ---
 import Login from './features/auth/components/Login';
@@ -15,10 +16,19 @@ import TakeQuiz from './features/exam/TakeQuiz';
 
 // --- ROUTE PROTECTION ---
 // Since we removed student accounts, anyone who logs in is a Teacher/Admin.
+// The access token is only in memory, so after a page reload we first ask the
+// server (via the refresh cookie) whether the teacher is still signed in.
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return children;
+  const dispatch = useDispatch();
+  const { isAuthenticated, sessionStatus } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!isAuthenticated) dispatch(restoreSession());
+  }, [dispatch, isAuthenticated]);
+
+  if (isAuthenticated) return children;
+  if (sessionStatus !== 'done') return <div className="p-8 text-gray-500">Loading...</div>;
+  return <Navigate to="/login" replace />;
 };
 
 // --- LAYOUT ---
@@ -49,7 +59,7 @@ const DashboardLayout = ({ children }) => {
 
         <div className="p-4 border-t border-border">
           <p className="text-sm font-medium text-gray-900 mb-3">{user?.name || 'Educator'}</p>
-          <button onClick={() => dispatch(logout())} className="text-sm text-red-600 hover:underline font-bold">Log out</button>
+          <button onClick={() => dispatch(logoutUser())} className="text-sm text-red-600 hover:underline font-bold">Log out</button>
         </div>
       </aside>
 

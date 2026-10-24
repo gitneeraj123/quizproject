@@ -1,41 +1,38 @@
-import api from './api';
+import api, { setAccessToken } from './api';
 
-// Register user
+// Each call that returns an access token hands it to api.js (memory only)
+// and returns just the user for Redux.
+const startSession = ({ accessToken, user }) => {
+  setAccessToken(accessToken);
+  return user;
+};
+
 const register = async (userData) => {
   const response = await api.post('/auth/register', userData);
-
-  if (response.data && response.data.accessToken) {
-    // Save the token and user to local storage
-    localStorage.setItem('accessToken', response.data.accessToken);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-  }
-
-  return response.data;
+  return startSession(response.data);
 };
 
-// Login user
 const login = async (userData) => {
   const response = await api.post('/auth/login', userData);
-
-  if (response.data && response.data.accessToken) {
-    // Save the token and user to local storage
-    localStorage.setItem('accessToken', response.data.accessToken);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-  }
-
-  return response.data;
+  return startSession(response.data);
 };
 
-// Logout user
-const logout = () => {
-  // Destroy the token on logout
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('user');
+// Uses the httpOnly refresh cookie to get a new access token after a page reload
+const restoreSession = async () => {
+  const response = await api.post('/auth/refresh-token');
+  return startSession(response.data);
+};
+
+const logout = async () => {
+  setAccessToken(null);
+  // Clears the refresh cookie and revokes the token on the backend
+  await api.post('/auth/logout');
 };
 
 const authService = {
   register,
   login,
+  restoreSession,
   logout,
 };
 

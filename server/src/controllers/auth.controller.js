@@ -11,14 +11,26 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-const setCookie = (res, refreshToken) => {
-  res.cookie('jwt', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
+// In production the client (Vercel) and API (Render) are on different sites,
+// so the cookie must be SameSite=None (which requires Secure) to be sent at all.
+const isProduction = process.env.NODE_ENV === 'production';
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? 'None' : 'Lax',
 };
+
+const setCookie = (res, refreshToken) => {
+  res.cookie('jwt', refreshToken, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
+};
+
+const toUserJSON = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  organization: user.organization,
+  role: user.role,
+});
 
 export const register = async (req, res, next) => {
   try {
@@ -40,7 +52,7 @@ export const register = async (req, res, next) => {
     res.status(201).json({
       success: true,
       accessToken,
-      user: { id: user._id, name: user.name, email: user.email, organization: user.organization, role: user.role },
+      user: toUserJSON(user),
     });
   } catch (error) {
     next(error);
@@ -65,7 +77,7 @@ export const login = async (req, res, next) => {
     res.status(200).json({
       success: true,
       accessToken,
-      user: { id: user._id, name: user.name, email: user.email, organization: user.organization, role: user.role },
+      user: toUserJSON(user),
     });
   } catch (error) {
     next(error);
@@ -95,9 +107,12 @@ export const refreshAccessToken = async (req, res, next) => {
 
     setCookie(res, newRefreshToken);
 
+    // The client keeps the access token in memory only, so on page reload
+    // this is how it gets both a fresh token and the user back.
     res.status(200).json({
       success: true,
       accessToken,
+      user: toUserJSON(user),
     });
   } catch (error) {
     return res.status(403).json({ success: false, message: 'Refresh token expired or invalid. Please log in again.' });
@@ -105,6 +120,12 @@ export const refreshAccessToken = async (req, res, next) => {
 };
 
 export const logout = async (req, res) => {
-  res.cookie('jwt', '', { httpOnly: true, expires: new Date(0) });
+  // Revoke the stored refresh token so the cookie can't be reused even if it leaked
+  const token = req.cookies?.jwt;
+  if (token) {
+    await User.updateOne({ refreshToken: token }, { $unset: { refreshToken: 1 } }).catch(() => {});
+  }
+
+  res.clearCookie('jwt', cookieOptions);
   res.status(200).json({ success: true, message: 'Logged out successfully.' });
 };

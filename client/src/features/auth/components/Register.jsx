@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setCredentials } from '../authSlice';
-import api from '../../../services/api';
+import { registerUser } from '../authSlice';
 
 export default function Register() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', organization: '' });
@@ -15,21 +14,11 @@ export default function Register() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // 1. Register the user and capture the tokens sent back by the backend
-      const res = await api.post('/auth/register', formData);
-      const { user, accessToken } = res.data;
-
-      // 2. Save tokens to localStorage so they persist across refreshes
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      // 3. Hydrate the Redux store
-      dispatch(setCredentials({ user, accessToken }));
-
-      // 4. Instantly auto-login and navigate to the dashboard!
+      // Registering also signs the teacher in, so go straight to the dashboard
+      await dispatch(registerUser(formData)).unwrap();
       navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+    } catch (message) {
+      setError(message);
     } finally {
       setIsLoading(false);
     }

@@ -5,11 +5,19 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// The access token lives only in memory (never localStorage), so injected scripts
+// can't read it from storage. On page reload it is restored via the httpOnly
+// refresh cookie — see restoreSession in authSlice.
+let accessToken = null;
+
+export const setAccessToken = (token) => {
+  accessToken = token;
+};
+
 // Request interceptor to attach JWT
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 }, (error) => {
@@ -36,8 +44,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // A 401 from /auth/* (e.g. wrong password on login) is a real answer, not an expired token
+    const isAuthRoute = originalRequest?.url?.startsWith('/auth/');
+
     // If we get a 401 and haven't already retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       if (isRefreshing) {
         // Queue the request while refresh is in progress
         return new Promise((resolve, reject) => {
@@ -52,22 +63,16 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh-token`,
-          {},
-          { withCredentials: true }
-        );
+        const { data } = await api.post('/auth/refresh-token');
 
-        const newToken = data.accessToken;
-        localStorage.setItem('accessToken', newToken);
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        processQueue(null, newToken);
+        setAccessToken(data.accessToken);
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        processQueue(null, data.accessToken);
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Refresh failed — clear auth and redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
+        // Refresh failed — the session is gone, send the teacher back to login
+        setAccessToken(null);
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {
