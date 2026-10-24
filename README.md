@@ -2,7 +2,7 @@
 
 A full-stack **MERN** application for educators to create, schedule, and manage online assessments. Students can take timed quizzes, while teachers can review results and reports. An optional Groq-powered feature generates questions from a PDF or a topic.
 
-**Live demo:** [Open the Quiz Assessment Platform](https://quizproject-jpc9ids86-personal-1c1e.vercel.app/register)  
+**Live demo:** [Open the Quiz Assessment Platform](https://quizproject-8vfg.onrender.com/register)  
 **Source code:** [GitHub repository](https://github.com/gitneeraj123/quizproject)
 
 ## Features
@@ -133,6 +133,6 @@ Set the same variables as `server/.env` in Render's *Environment* tab, with `NOD
 
 ## Live demo
 
-[Launch the application](https://quizproject-jpc9ids86-personal-1c1e.vercel.app/register)
+[Launch the application](https://quizproject-8vfg.onrender.com/register)
 
 If the demo asks you to register, use a test account and avoid entering real or sensitive information.
