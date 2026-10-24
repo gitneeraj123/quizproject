@@ -223,7 +223,11 @@ export default function TakeQuiz() {
     return (
       <div className="min-h-screen bg-[#5D1A4A] flex items-center justify-center p-4">
         <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-[#46234D] h-28 border-b-4 border-blue-400 flex items-center justify-center text-4xl">📝</div>
+          {quiz.coverImage ? (
+            <img src={quiz.coverImage} alt="Quiz cover" className="w-full h-40 object-cover border-b-4 border-blue-400" />
+          ) : (
+            <div className="bg-[#46234D] h-28 border-b-4 border-blue-400 flex items-center justify-center text-4xl">📝</div>
+          )}
           <div className="p-8">
             <h1 className="text-2xl font-bold text-center text-gray-900 mb-6">{quiz.title}</h1>
             <div className="space-y-4 mb-8">
@@ -279,6 +283,9 @@ export default function TakeQuiz() {
                 {markedForReview[globalIdx] ? '🚩 Marked for Review' : '🏳️ Mark for Review'}
               </button>
             </div>
+            {q.imageUrl && (
+              <img src={q.imageUrl} alt="Question illustration" draggable={false} className="max-h-80 max-w-full mb-4 rounded-lg border border-gray-200" />
+            )}
             <h2 className="text-xl font-bold text-gray-900 mb-6">{q.question}</h2>
             
             <div className="space-y-3">
@@ -308,7 +315,12 @@ export default function TakeQuiz() {
                       <div className={`w-5 h-5 rounded border flex items-center justify-center text-xs ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
                         {isSelected && '✓'}
                       </div>
-                      <span>{opt.text}</span>
+                      <div className="flex flex-col gap-2">
+                        {opt.imageUrl && (
+                          <img src={opt.imageUrl} alt={`Option ${idx + 1}`} draggable={false} className="max-h-32 max-w-full object-contain rounded" />
+                        )}
+                        {opt.text && <span>{opt.text}</span>}
+                      </div>
                     </button>
                   );
                 })
