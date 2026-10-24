@@ -1,5 +1,4 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../services/api';
 
@@ -16,14 +15,8 @@ export default function TakeQuiz() {
   const [studentEmail, setStudentEmail] = useState('');
   const [hasStarted, setHasStarted] = useState(false);
 
-  // --- SECTIONS & QUESTION STATE ---
-  /* FUTURE ENHANCEMENT: Sections State 
-  const [sections, setSections] = useState([]); 
-  const [activeSection, setActiveSection] = useState(''); 
-  */
-  
-  const [currentQuestion, setCurrentQuestion] = useState(0); // Global Question Index
-  const [answers, setAnswers] = useState({}); // Unique map key format: "globalIndex": [selections]
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({}); // { questionIndex: [selections] }
   
   const [timeLeft, setTimeLeft] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,18 +37,10 @@ export default function TakeQuiz() {
         if (quizData.expiresAt && new Date() > new Date(quizData.expiresAt)) {
           setIsExpired(true);
         }
-        
-        /* FUTURE ENHANCEMENT: Extract unique section names
-        const uniqueSections = Array.from(
-          new Set(quizData.questions.map(q => q.section || 'General Focus'))
-        );
-        setSections(uniqueSections);
-        setActiveSection(uniqueSections[0] || '');
-        */
-        
+
         setQuiz(quizData);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Quiz not found or link is invalid.');
         setLoading(false);
       }
@@ -137,21 +122,6 @@ export default function TakeQuiz() {
     } else {
       handleSubmit(); // Out of questions entirely
     }
-
-    /* FUTURE ENHANCEMENT: Section Jump Logic
-    const filtered = getFilteredQuestions();
-    if (currentQuestion < filtered.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      const currentSectionIdx = sections.indexOf(activeSection);
-      if (currentSectionIdx < sections.length - 1) {
-        setActiveSection(sections[currentSectionIdx + 1]);
-        setCurrentQuestion(0);
-      } else {
-        handleSubmit();
-      }
-    }
-    */
   };
 
   const formatTime = (seconds) => {
@@ -196,7 +166,7 @@ export default function TakeQuiz() {
       };
       const res = await api.post('/results', payload);
       setResult(res.data.data); 
-    } catch (err) {
+    } catch {
       alert('Failed to submit answers. Please try again.');
     }
     setIsSubmitting(false);
@@ -290,15 +260,6 @@ export default function TakeQuiz() {
             ⏱ {formatTime(timeLeft)}
           </div>
         </div>
-
-        {/* FUTURE ENHANCEMENT: DYNAMIC SECTION TABS */}
-        {/*
-        <div className="flex border-b border-gray-200 gap-2 mb-6 overflow-x-auto whitespace-nowrap scrollbar-none">
-          {sections.map((secName) => (
-             ...
-          ))}
-        </div>
-        */}
 
         {/* Question Frame */}
         {q && (

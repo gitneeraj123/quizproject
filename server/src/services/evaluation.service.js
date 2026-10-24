@@ -27,28 +27,12 @@ export const evaluateSubmission = (quiz, studentAnswers) => {
       ? (Array.isArray(rawCorrect) ? rawCorrect : [rawCorrect]) 
       : [];
 
-    // Check if the AI saved a text string instead of a number
-    const isTextBased = actualCorrectRaw.length > 0 && 
-                        typeof actualCorrectRaw[0] === 'string' && 
-                        isNaN(Number(actualCorrectRaw[0]));
-
     let isCorrect = false;
 
     if (question.type === 'Fill in the Blank') {
       const studentText = studentIndices[0]?.toString().trim().toLowerCase() || '';
       const correctText = question.options[0]?.text?.toString().trim().toLowerCase() || '';
       if (studentText === correctText && correctText !== '') {
-        isCorrect = true;
-      }
-    } else if (isTextBased) {
-      const normalizedStudent = studentIndices.map(i => {
-        const opt = question.options[Number(i)];
-        const text = typeof opt === 'string' ? opt : (opt?.text || '');
-        return text.toString().trim().toLowerCase();
-      }).sort();
-      
-      const normalizedCorrect = actualCorrectRaw.map(ans => ans.toString().trim().toLowerCase()).sort();
-      if (JSON.stringify(normalizedStudent) === JSON.stringify(normalizedCorrect)) {
         isCorrect = true;
       }
     } else {

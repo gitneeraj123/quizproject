@@ -13,7 +13,6 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
     title: 'Exploring the World of AI',
     subject: 'Computer Science',
     grade: '12th Grade',
-    visibility: 'Restricted',
     coverImage: null,
     timerType: 'session', 
     startsAt: '',
@@ -160,7 +159,6 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
         title: publishForm.title,
         subject: publishForm.subject,
         grade: publishForm.grade,
-        visibility: publishForm.visibility,
         coverImage: publishForm.coverImage,
         timerType: publishForm.timerType, 
         startsAt: publishForm.startsAt || null, 
@@ -413,13 +411,6 @@ export default function CreateQuiz({ initialAiQuestions = [] }) {
                   <label className="block text-sm font-bold text-gray-700 mb-2">Deadline (Optional)</label>
                   <input type="datetime-local" value={publishForm.expiresAt} onChange={e => setPublishForm({...publishForm, expiresAt: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none focus:border-pink-500" />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Visibility</label>
-                <select value={publishForm.visibility} onChange={e => setPublishForm({...publishForm, visibility: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 font-medium outline-none">
-                  <option value="Restricted">Restricted (Visible only by you)</option>
-                  <option value="Public">Public (Visible in Assessment library)</option>
-                </select>
               </div>
             </div>
             

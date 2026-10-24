@@ -13,15 +13,13 @@ const QuestionSchema = new mongoose.Schema({
   correctAnswers: { type: [Number], required: true }, 
   timeLimit: { type: Number, default: 1 },
   points: { type: Number, default: 1 },
-  multipleCorrect: { type: Boolean, default: false },
-  section: { type: String, default: 'General Focus' }
+  multipleCorrect: { type: Boolean, default: false }
 });
 
 const QuizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   subject: { type: String, default: 'General' },
   grade: { type: String, default: 'Any' },
-  visibility: { type: String, default: 'Restricted' },
   coverImage: { type: String, default: null },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -30,7 +28,7 @@ const QuizSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'published', 'closed'],
+    enum: ['published', 'closed'],
     default: 'published'
   },
   questions: [QuestionSchema],
