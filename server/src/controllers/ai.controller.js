@@ -1,4 +1,4 @@
-import extractTextFromPDF from '../utils/pdfHelper.cjs';
+import extractTextFromPDF from '../utils/pdfHelper.js';
 import { generateQuizFromText } from '../services/ai.service.js';
 
 /**
@@ -12,7 +12,7 @@ export const generateQuiz = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please upload a PDF or provide a prompt.' });
     }
 
-    const { gradeLevel = '12th Grade', questionCount = 5 } = req.body;
+    const { gradeLevel = '12th Grade', questionCount = 10, difficulty = 'Medium' } = req.body;
     let extractedText = '';
 
     // THE FIX: Check the file type before parsing!
@@ -32,13 +32,10 @@ export const generateQuiz = async (req, res, next) => {
     const textSnippet = extractedText.substring(0, 15000); 
 
     // Send to Groq AI
-    const generatedData = await generateQuizFromText(textSnippet, gradeLevel, parseInt(questionCount));
+    const { questions } = await generateQuizFromText(textSnippet, gradeLevel, questionCount, difficulty);
 
     // Return to React
-    res.status(200).json({
-      success: true,
-      data: generatedData.questions || generatedData // fallback in case Groq returns the array directly
-    });
+    res.status(200).json({ success: true, data: questions });
 
   } catch (error) {
     console.error('AI Generation Error:', error);

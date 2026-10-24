@@ -1,6 +1,6 @@
 # AI-Powered Quiz Assessment Platform
 
-A full-stack **MERN** application for educators to create, schedule, and manage online assessments. Students can take timed quizzes, while teachers can review results and reports. An optional Groq-powered feature generates questions from supplied text.
+A full-stack **MERN** application for educators to create, schedule, and manage online assessments. Students can take timed quizzes, while teachers can review results and reports. An optional Groq-powered feature generates questions from a PDF or a topic.
 
 **Live demo:** [Open the Quiz Assessment Platform](https://quizproject-jpc9ids86-personal-1c1e.vercel.app/register)  
 **Source code:** [GitHub repository](https://github.com/gitneeraj123/quizproject)
@@ -8,8 +8,9 @@ A full-stack **MERN** application for educators to create, schedule, and manage 
 ## Features
 
 ### AI-assisted question generation
-- Generate up to 25 context-aware questions from input text using the Groq Llama API.
-- Supports multiple-choice, true/false, and fill-in-the-blank question formats.
+- Generate up to 50 questions (Easy, Medium or Hard) from a PDF or a topic using the Groq API (free tier works).
+- Always review AI-generated answers before publishing.
+- AI questions are multiple choice; true/false and fill-in-the-blank questions can be added manually.
 
 ### Assessment integrity
 - Clipboard and context-menu restrictions during assessments.
@@ -37,7 +38,7 @@ A full-stack **MERN** application for educators to create, schedule, and manage 
 | Frontend | React, Vite, Tailwind CSS, React Router |
 | Backend | Node.js, Express.js |
 | Database | MongoDB Atlas, Mongoose |
-| AI integration | Groq SDK, Llama 3.1 8B |
+| AI integration | Groq SDK, `openai/gpt-oss-120b` (override with `GROQ_MODEL`) |
 | Security | JWT authentication, Helmet, Express Rate Limit |
 | Background tasks | Scheduled cleanup / cron service |
 
@@ -50,7 +51,7 @@ flowchart TD
     UI --> API[Express API]
     API --> AUTH[Authentication / authorization]
     AUTH --> DB[(MongoDB Atlas)]
-    API --> AI[Groq Llama API]
+    API --> AI[Groq API]
     AI --> API
     API --> UI
     UI -->|Submit answers| API

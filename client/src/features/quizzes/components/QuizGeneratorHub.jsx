@@ -1,9 +1,6 @@
-import { useState, useRef } from 'react';
-import api from '../../../services/api';
+import { useRef } from 'react';
 
-export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt, onCreateManually }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export default function QuizGeneratorHub({ onFileSelected, onSelectPrompt, onCreateManually }) {
   const fileInputRef = useRef(null);
 
   // Trigger the hidden file input when "Device" is clicked
@@ -11,52 +8,16 @@ export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt,
     fileInputRef.current.click();
   };
 
-  // Handle the actual file upload to your backend
-  const handleFileUpload = async (e) => {
+  // The file goes to the settings screen, where grade/difficulty/count are chosen before generating
+  const handleFileChosen = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    setLoading(true);
-    setError('');
-
-    const formData = new FormData();
-    formData.append('document', file);
-    formData.append('gradeLevel', '12th Grade'); 
-    formData.append('questionCount', 5);
-
-    try {
-      const response = await api.post('/ai/generate-quiz', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      // Pass the generated questions up to the parent to move to the next screen!
-      onQuestionsGenerated(response.data.data);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to generate questions. Check console.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    e.target.value = ''; // allow picking the same file again after going back
+    if (file) onFileSelected(file);
   };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-24 bg-white rounded-2xl shadow-sm border border-gray-100 min-h-125">
-        <div className="w-16 h-16 border-4 border-[#00B4D8] border-t-transparent rounded-full animate-spin mb-6"></div>
-        <h3 className="text-xl font-bold text-gray-800">Understanding Document...</h3>
-        <p className="text-gray-500 mt-2">Extracting key concepts using AI</p>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto mt-12 p-8">
       <h1 className="text-4xl font-bold text-center text-gray-900 mb-12">How would you like to get started?</h1>
-      
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-center">
-          {error}
-        </div>
-      )}
 
       {/* Two-Column Grid for a balanced, clean UI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -72,7 +33,7 @@ export default function QuizGeneratorHub({ onQuestionsGenerated, onSelectPrompt,
             type="file" 
             accept=".pdf" 
             ref={fileInputRef} 
-            onChange={handleFileUpload} 
+            onChange={handleFileChosen}
             className="hidden" 
           />
           

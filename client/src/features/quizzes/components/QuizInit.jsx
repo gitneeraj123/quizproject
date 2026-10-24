@@ -7,6 +7,12 @@ export default function QuizInit() {
   // States: 'init' -> 'hub' -> 'prompt' -> 'editor'
   const [currentStep, setCurrentStep] = useState('init'); 
   const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null); // PDF chosen in the hub, if any
+
+  const openSettings = (file) => {
+    setSelectedFile(file);
+    setCurrentStep('prompt');
+  };
 
   const handleQuestionsGenerated = (questions) => {
     setAiGeneratedQuestions(questions);
@@ -37,15 +43,16 @@ export default function QuizInit() {
       )}
 
       {currentStep === 'hub' && (
-        <QuizGeneratorHub 
-          onQuestionsGenerated={handleQuestionsGenerated} 
-          onSelectPrompt={() => setCurrentStep('prompt')} 
+        <QuizGeneratorHub
+          onFileSelected={openSettings}
+          onSelectPrompt={() => openSettings(null)}
           onCreateManually={handleCreateManually}
         />
       )}
 
       {currentStep === 'prompt' && (
-        <PromptGenerator 
+        <PromptGenerator
+          file={selectedFile}
           onGoBack={() => setCurrentStep('hub')}
           onQuestionsGenerated={handleQuestionsGenerated}
         />
