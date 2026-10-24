@@ -62,7 +62,7 @@ flowchart TD
 
 ### Prerequisites
 
-- Node.js v18 or later
+- Node.js 22 (Vite requires 20.19+ or 22.12+)
 - MongoDB Atlas cluster (or compatible MongoDB instance)
 - Groq API key for AI question generation
 
@@ -91,7 +91,6 @@ GROQ_API_KEY=your_groq_api_key
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-CLIENT_URL=http://localhost:5173
 NODE_ENV=development
 ```
 
@@ -111,13 +110,25 @@ npm install
 npm run dev
 ```
 
-The Vite development server runs at `http://localhost:5173`. Keep backend and frontend environment values aligned with your local setup.
+Open `http://localhost:5173`. Vite forwards `/api` requests to the backend on port 5000 (see `client/vite.config.js`), so no frontend environment variables are needed.
+
+## Deployment (Render)
+
+The app deploys as a **single Render web service**: Express serves both the API (`/api/v1/...`) and the built React app, so the site and API share one domain.
+
+| Setting | Value |
+|---|---|
+| Root directory | *(leave empty)* |
+| Build command | `npm run build` |
+| Start command | `npm start` |
+| Health check path | `/health` |
+
+Set the same variables as `server/.env` in Render's *Environment* tab, with `NODE_ENV=production` (`PORT` is provided by Render).
 
 ## Environment and security
 
 - Use your own MongoDB connection string and API keys; never commit secrets.
 - Use strong, unique JWT secrets and keep production secrets in deployment environment configuration.
-- Configure the production client URL and allowed origins before deployment.
 - Treat tab monitoring and clipboard restrictions as deterrents, not as a complete anti-cheating guarantee.
 
 ## Live demo

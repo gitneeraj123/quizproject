@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  // Same origin: in production Express serves this app; in dev Vite proxies /api (vite.config.js)
+  baseURL: '/api/v1',
   withCredentials: true,
 });
 

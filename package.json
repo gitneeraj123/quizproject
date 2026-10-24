@@ -1,0 +1,12 @@
+{
+  "name": "quizproject",
+  "private": true,
+  "description": "Builds the React client and runs the Express server as one Render web service",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "npm ci --prefix client --include=dev && npm run build --prefix client && npm ci --prefix server --omit=dev",
+    "start": "npm start --prefix server"
+  }
+}

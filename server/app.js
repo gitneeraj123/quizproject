@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 // Import Routes
 import authRoutes from './src/routes/auth.routes.js';
@@ -29,7 +31,14 @@ app.use(cors({
 }));
 
 // 2. Set Security HTTP Headers
-app.use(helmet());
+// The React app is served from this server too, so its CSP must allow quiz images from Cloudinary
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      'img-src': ["'self'", 'data:', 'https://res.cloudinary.com'],
+    },
+  },
+}));
 
 // 3. Global Rate Limiting
 app.set('trust proxy', 1); // CRITICAL: Required for Render (or any reverse proxy) to correctly identify client IPs
@@ -82,6 +91,19 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+// Serve the built React app (client/dist) from the same server, so the site and API share
+// one domain: no CORS, and the refresh cookie is first-party.
+const clientDist = fileURLToPath(new URL('../client/dist', import.meta.url));
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+
+  // Any other GET outside /api is a React Router page (e.g. /dashboard, /take-quiz/:id)
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
+    res.sendFile('index.html', { root: clientDist });
+  });
+}
 
 // TODO (Bug #27): Timer enforcement should be server-side.
 // Currently the quiz timer is only enforced on the client via setInterval.

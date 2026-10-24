@@ -11,13 +11,11 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-// In production the client (Vercel) and API (Render) are on different sites,
-// so the cookie must be SameSite=None (which requires Secure) to be sent at all.
-const isProduction = process.env.NODE_ENV === 'production';
+// The React app is served by this same server, so the cookie is first-party and Lax is enough
 const cookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? 'None' : 'Lax',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'Lax',
 };
 
 const setCookie = (res, refreshToken) => {
