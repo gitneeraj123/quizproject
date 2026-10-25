@@ -1,20 +1,26 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../authSlice';
+import { useAuth } from '../AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const dispatch = useDispatch();
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const { status, error } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const resultAction = await dispatch(loginUser({ email, password }));
-    if (loginUser.fulfilled.match(resultAction)) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await login({ email, password });
       navigate('/dashboard'); // Go to dashboard on success
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,10 +60,10 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={status === 'loading'}
+            disabled={isLoading}
             className="w-full bg-primary text-white font-medium py-2 px-4 rounded-md hover:bg-gray-800 transition-colors disabled:opacity-70 mt-4"
           >
-            {status === 'loading' ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

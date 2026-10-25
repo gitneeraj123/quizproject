@@ -1,24 +1,24 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { registerUser } from '../authSlice';
+import { useAuth } from '../AuthContext';
 
 export default function Register() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const { register } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     try {
       // Registering also signs the teacher in, so go straight to the dashboard
-      await dispatch(registerUser(formData)).unwrap();
+      await register(formData);
       navigate('/dashboard');
-    } catch (message) {
-      setError(message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
