@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logoutUser, restoreSession } from './features/auth/authSlice';
+import { useAuth } from './features/auth/AuthContext';
 
 // --- COMPONENTS ---
 import Login from './features/auth/components/Login';
@@ -19,12 +18,11 @@ import TakeQuiz from './features/exam/TakeQuiz';
 // The access token is only in memory, so after a page reload we first ask the
 // server (via the refresh cookie) whether the teacher is still signed in.
 const ProtectedRoute = ({ children }) => {
-  const dispatch = useDispatch();
-  const { isAuthenticated, sessionStatus } = useSelector((state) => state.auth);
+  const { isAuthenticated, sessionStatus, restoreSession } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) dispatch(restoreSession());
-  }, [dispatch, isAuthenticated]);
+    if (!isAuthenticated) restoreSession();
+  }, [isAuthenticated, restoreSession]);
 
   if (isAuthenticated) return children;
   if (sessionStatus !== 'done') return <div className="p-8 text-gray-500">Loading...</div>;
@@ -33,8 +31,7 @@ const ProtectedRoute = ({ children }) => {
 
 // --- LAYOUT ---
 const DashboardLayout = ({ children }) => {
-  const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -58,7 +55,7 @@ const DashboardLayout = ({ children }) => {
 
         <div className="p-4 border-t border-border">
           <p className="text-sm font-medium text-gray-900 mb-3">{user?.name || 'Educator'}</p>
-          <button onClick={() => dispatch(logoutUser())} className="text-sm text-red-600 hover:underline font-bold">Log out</button>
+          <button onClick={logout} className="text-sm text-red-600 hover:underline font-bold">Log out</button>
         </div>
       </aside>
 

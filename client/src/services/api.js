@@ -8,7 +8,7 @@ const api = axios.create({
 
 // The access token lives only in memory (never localStorage), so injected scripts
 // can't read it from storage. On page reload it is restored via the httpOnly
-// refresh cookie — see restoreSession in authSlice.
+// refresh cookie — see restoreSession in AuthContext.
 let accessToken = null;
 
 export const setAccessToken = (token) => {
